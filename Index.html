@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador Comercial Sipag</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root{
+      --roxo:#5d008f; --roxo-2:#7b13bd; --roxo-3:#f5eafd;
+      --verde:#008f52; --verde-2:#00b66a; --verde-3:#eafff4;
+      --bg:#faf7ff; --panel:#ffffff; --text:#16221b; --muted:#68746d;
+      --line:#eadff4; --shadow:0 22px 55px rgba(63,0,100,.14); --radius:24px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);background:
+      radial-gradient(circle at 10% 8%,rgba(123,19,189,.13),transparent 32%),
+      radial-gradient(circle at 92% 10%,rgba(0,182,106,.13),transparent 28%),
+      linear-gradient(180deg,#fff 0%,var(--bg) 100%)}
+    .wrap{max-width:1280px;margin:0 auto;padding:22px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:950;color:var(--verde);font-size:22px;letter-spacing:-.03em}
+    .brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--verde),var(--verde-2));display:grid;place-items:center;color:#fff;font-weight:950;box-shadow:0 12px 25px rgba(0,143,82,.2)}
+    .badge{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 13px;color:var(--roxo);font-weight:900;font-size:13px;box-shadow:0 10px 25px rgba(63,0,100,.06)}
+    .hero{display:grid;grid-template-columns:1.15fr 2fr;gap:18px;align-items:stretch;margin-bottom:18px}
+    .pitch{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+    .pitch:after{content:"";position:absolute;right:-50px;bottom:-70px;width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,rgba(123,19,189,.16),rgba(0,182,106,.14))}
+    .pitch h1{margin:0;font-size:30px;line-height:1.05;letter-spacing:-.055em}.pitch p{margin:10px 0 0;color:var(--muted);line-height:1.48}.rocket{font-size:32px;margin-left:6px}
+    .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .kpi{border-radius:22px;padding:22px;min-height:124px;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.45)}
+    .kpi b{display:block;font-size:13px;margin-bottom:16px}.kpi span{display:block;font-size:28px;font-weight:950;letter-spacing:-.05em}.kpi small{display:block;margin-top:4px;opacity:.78;font-weight:700}.kpi:after{content:"";position:absolute;right:-28px;bottom:-36px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.18)}
+    .kpi.purple{background:linear-gradient(135deg,var(--roxo),var(--roxo-2));color:#fff}.kpi.green{background:linear-gradient(135deg,var(--verde),var(--verde-2));color:#fff}.kpi.white{background:#fff;color:var(--roxo)}
+    .layout{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+    .card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 18px 40px rgba(63,0,100,.08)}
+    .card h2{margin:0 0 14px;font-size:17px;letter-spacing:-.02em}.form-list{display:grid;gap:9px}.line{display:grid;grid-template-columns:1fr 116px;align-items:center;gap:10px;border:1px solid #eee5f6;border-radius:15px;padding:8px 10px;background:#fff}.line label{font-size:13px;font-weight:850;color:#2d3730}.line input,.line select{width:100%;border:0;background:#faf8fc;border-radius:10px;padding:9px;text-align:right;font-size:14px}.line input:focus,.line select:focus{outline:2px solid rgba(123,19,189,.16)}
+    .hint{font-size:11px;color:var(--muted);margin-top:-4px;margin-left:4px}.mode-box{margin-top:14px;display:grid;gap:9px}.mode{display:flex;gap:10px;align-items:flex-start;border:1px solid #eee5f6;border-radius:16px;padding:11px;background:#fff;cursor:pointer}.mode input{accent-color:var(--roxo);margin-top:3px}.mode strong{display:block;font-size:13px}.mode span{display:block;font-size:11px;color:var(--muted);line-height:1.3;margin-top:2px}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.btn{border:0;border-radius:15px;padding:13px 14px;font-weight:950;cursor:pointer;transition:.15s ease}.btn:hover{transform:translateY(-1px)}.primary{background:linear-gradient(135deg,var(--roxo),var(--roxo-2));color:#fff}.whats{background:linear-gradient(135deg,#00a862,#00c875);color:#fff}.outline{background:#fff;color:var(--roxo);border:1px solid #d8b9ef}.soft{background:var(--roxo-3);color:var(--roxo)}
+    .result-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.result-head h2{margin:0;font-size:17px;color:var(--roxo)}.pill{background:var(--verde-3);color:var(--verde);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:950}
+    .tablewrap{overflow:auto;border:1px solid #eee5f6;border-radius:20px;background:#fff}table{width:100%;min-width:820px;border-collapse:separate;border-spacing:0}th,td{padding:13px 12px;border-bottom:1px solid #f0edf4;text-align:right;font-size:14px;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{background:#fbf9fe;color:#5b5364;text-transform:uppercase;font-size:11px;letter-spacing:.05em}tbody tr:hover{background:#fdfbff}tr.best{background:#effff6}.tag{display:inline-flex;padding:5px 9px;border-radius:999px;background:var(--verde-3);color:var(--verde);font-size:12px;font-weight:950}
+    .footer-strip{margin-top:14px;background:linear-gradient(90deg,var(--roxo-3),var(--verde-3));border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#3f2b4e}.footer-strip b{color:var(--roxo)}.note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.saved{display:grid;gap:8px;margin-top:10px}.saved-item{border:1px solid var(--line);border-radius:16px;padding:11px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff}.saved-item small{color:var(--muted)}
+    @media(max-width:980px){.hero,.layout{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr 1fr}.wrap{padding:14px}}
+    @media(max-width:680px){.topbar{align-items:flex-start;flex-direction:column}.kpis,.actions{grid-template-columns:1fr}.line{grid-template-columns:1fr}.line input,.line select{text-align:left}.pitch h1{font-size:25px}}
+    @media print{body{background:#fff}.actions,.saved-section,.topbar{display:none}.card,.pitch,.kpi{box-shadow:none}.layout,.hero{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">S</div> Simulador de Taxas Sipag</div>
+    <div class="badge">Layout Comercial • Proposta e comparação</div>
+  </header>
+
+  <section class="hero">
+    <div class="pitch">
+      <h1>Simule e aumente seu lucro com Sipag! <span class="rocket">🚀</span></h1>
+      <p>Veja como as taxas impactam no recebimento e use a simulação para apoiar a negociação com o cooperado.</p>
+    </div>
+    <div class="kpis">
+      <div class="kpi purple"><b>Valor da Venda</b><span id="kValor">R$ 0,00</span><small>valor informado</small></div>
+      <div class="kpi green"><b>Valor Líquido</b><span id="kLiquido">R$ 0,00</span><small>melhor cenário</small></div>
+      <div class="kpi white"><b>Economia potencial</b><span id="kEconomia">R$ 0,00</span><small>estimativa da simulação</small></div>
+    </div>
+  </section>
+
+  <main class="layout">
+    <section class="card">
+      <h2>Dados da simulação</h2>
+      <div class="form-list">
+        <div class="line"><label>Taxa Débito (%)</label><input id="txDebito" type="text" inputmode="decimal" value="1,99"></div>
+        <div class="line"><label>Crédito 1x (%)</label><input id="txCredito1" type="text" inputmode="decimal" value="2,50"></div>
+        <div class="line"><label>Crédito 2 a 6x (%)</label><input id="txCredito26" type="text" inputmode="decimal" value="3,10"></div>
+        <div class="line"><label>Crédito 7 a 12x (%)</label><input id="txCredito712" type="text" inputmode="decimal" value="3,80"></div>
+        <div class="line"><label>Crédito 13 a 21x (%)</label><input id="txCredito1321" type="text" inputmode="decimal" value="4,20"></div>
+        <div class="line"><label>Antecipação (%)</label><input id="txAntecipacao" type="text" inputmode="decimal" value="0"></div>
+        <div class="hint">Aplicada no crédito, parcela a parcela.</div>
+        <div class="line"><label>Valor base / custo (R$)</label><input id="valor" type="text" inputmode="decimal" value="100,00"></div>
+        <div class="line"><label>Margem de lucro (%)</label><input id="margem" type="text" inputmode="decimal" value="0"></div>
+        <div class="line"><label>Parcelas máximas</label><select id="maxParcelas"><option>21</option><option>18</option><option>15</option><option>12</option><option selected>10</option><option>6</option><option>3</option></select></div>
+      </div>
+
+      <div class="mode-box">
+        <label class="mode"><input type="radio" name="modo" value="cliente" checked><div><strong>Cliente paga taxas</strong><span>A taxa é adicionada ao valor da venda.</span></div></label>
+        <label class="mode"><input type="radio" name="modo" value="vendedor"><div><strong>Vendedor paga taxas</strong><span>Cliente paga o valor informado; a taxa reduz o líquido.</span></div></label>
+        <label class="mode"><input type="radio" name="modo" value="parcelamento"><div><strong>Cliente paga parcelamento</strong><span>Cliente cobre apenas a diferença do parcelado.</span></div></label>
+        <label class="mode"><input type="radio" name="modo" value="dividido"><div><strong>Taxas divididas</strong><span>Metade da taxa para cada lado.</span></div></label>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" onclick="calcular()">Calcular</button>
+        <button class="btn soft" onclick="salvarSimulacao()">Salvar</button>
+        <button class="btn outline" onclick="baixarImagem()">Gerar JPG</button>
+        <button class="btn whats" onclick="compartilhar()">Compartilhar</button>
+      </div>
+    </section>
+
+    <section id="resultadoArea" class="card">
+      <div class="result-head">
+        <h2>Compare as modalidades e escolha a melhor para você</h2>
+        <span class="pill" id="kModo">Cliente paga taxas</span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Modalidade</th><th>Taxa total</th><th>Valor bruto da venda</th><th>Valor das taxas</th><th>Valor líquido</th><th>Lucro líquido</th><th>Por parcela</th></tr></thead>
+          <tbody id="tbody"><tr><td colspan="7" style="text-align:center;color:#68746d">Informe os dados e clique em Calcular.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="footer-strip">
+        <div><b>Mais lucro para o seu negócio!</b><br><small>Com a Sipag, você visualiza o impacto das taxas antes de vender.</small></div>
+        <button class="btn outline" onclick="window.print()">Gerar proposta / PDF</button>
+      </div>
+      <div class="note" id="obsFormula"></div>
+      <div class="saved-section">
+        <h2 style="margin-top:18px">Simulações salvas</h2>
+        <div class="saved" id="salvas"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const brl = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const pct = n => (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+'%';
+function num(id){
+  const el=document.getElementById(id); let v=String(el.value||'').trim(); if(!v) return 0;
+  if(v.includes(',') && v.includes('.')) v=v.replace(/\./g,'').replace(',', '.');
+  else if(v.includes(',')) v=v.replace(',', '.');
+  return Number(v)||0;
+}
+function modo(){return document.querySelector('input[name="modo"]:checked').value}
+function modoNome(m){return {vendedor:'Vendedor paga taxas',cliente:'Cliente paga taxas',parcelamento:'Cliente paga parcelamento',dividido:'Taxas divididas'}[m]}
+function dados(){return {deb:num('txDebito'),c1:num('txCredito1'),c26:num('txCredito26'),c712:num('txCredito712'),c1321:num('txCredito1321'),ant:num('txAntecipacao'),valor:num('valor'),margem:num('margem'),max:+document.getElementById('maxParcelas').value,modo:modo()}}
+function mdrParcela(d,p){ if(p===0) return d.deb/100; if(p===1) return d.c1/100; if(p<=6) return d.c26/100; if(p<=12) return d.c712/100; return d.c1321/100; }
+function taxaTotalSite(d,p){
+  const mdr=mdrParcela(d,p);
+  const ant=d.ant/100;
+  if(p===0) return mdr; // débito usa somente a taxa MDR
+  if(ant<=0) return mdr;
+
+  // Modelo ajustado para bater com a Calculadora de Taxas:
+  // a antecipação é calculada parcela a parcela de forma composta.
+  let somaFatorAntecipacao = 0;
+  for(let i=1;i<=p;i++){
+    somaFatorAntecipacao += Math.pow(1+ant, i) - 1;
+  }
+  const antecipacaoMedia = somaFatorAntecipacao / p;
+  return mdr + ((1 - mdr) * antecipacaoMedia);
+}
+function fatorLiquido(d,p){
+  return Math.max(0, 1 - taxaTotalSite(d,p));
+}
+function calcular(){
+ const d=dados(); const base=d.valor*(1+d.margem/100); const linhas=[]; if(!d.valor){alert('Informe um valor maior que zero.');return}
+ for(let p=0;p<=d.max;p++){
+   const nome=p===0?'Débito':p===1?'Crédito 1x':`Crédito ${p}x`; const taxaEfetiva=taxaTotalSite(d,p); const fator=1-taxaEfetiva; const fatorCredito1=fatorLiquido(d,1); let valorVenda=base;
+   if(d.modo==='cliente') valorVenda=base/fator;
+   if(d.modo==='dividido') valorVenda=base/(1-(taxaEfetiva/2));
+   if(d.modo==='parcelamento' && p>1){ const taxaExtra=Math.max(0,fatorCredito1-fator); valorVenda=base/(1-taxaExtra); }
+   const liquido=valorVenda*fator; const valorTaxa=valorVenda-liquido; const lucro=liquido-d.valor;
+   linhas.push({nome,p,taxa:taxaEfetiva*100,valorVenda,valorTaxa,liquido,lucro,parcela:p>1?valorVenda/p:valorVenda});
+ }
+ const melhor=[...linhas].sort((a,b)=>b.liquido-a.liquido)[0]; const debito=linhas[0]; const economia=Math.max(0,melhor.liquido-debito.liquido);
+ document.getElementById('kValor').textContent=brl.format(d.valor); document.getElementById('kLiquido').textContent=brl.format(melhor.liquido); document.getElementById('kEconomia').textContent=brl.format(economia); document.getElementById('kModo').textContent=modoNome(d.modo);
+ document.getElementById('tbody').innerHTML=linhas.map(l=>`<tr class="${l===melhor?'best':''}"><td><span class="tag">${l.nome}</span></td><td>${pct(l.taxa)}</td><td>${brl.format(l.valorVenda)}</td><td>${brl.format(l.valorTaxa)}</td><td><b>${brl.format(l.liquido)}</b></td><td>${brl.format(l.lucro)}</td><td>${l.p>1?brl.format(l.parcela):'-'}</td></tr>`).join('');
+ document.getElementById('obsFormula').innerHTML='Memória de cálculo ajustada ao modelo da calculadora de referência: débito usa somente MDR; crédito e parcelado aplicam antecipação composta parcela a parcela.';
+}
+function salvarSimulacao(){calcular(); const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); arr.unshift({...dados(),data:new Date().toLocaleString('pt-BR')}); localStorage.setItem('sipag-sims-comercial',JSON.stringify(arr.slice(0,5))); listarSalvas();}
+function listarSalvas(){const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); document.getElementById('salvas').innerHTML=arr.length?arr.map((s,i)=>`<div class="saved-item"><div><b>${brl.format(s.valor)}</b><br><small>${s.data} • ${modoNome(s.modo)}</small></div><button class="btn soft" onclick="carregar(${i})">Carregar</button></div>`).join(''):'<small>Nenhuma simulação salva.</small>'}
+function carregar(i){const s=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]')[i]; if(!s)return; txDebito.value=s.deb; txCredito1.value=s.c1; txCredito26.value=s.c26; txCredito712.value=s.c712; txCredito1321.value=s.c1321||0; txAntecipacao.value=s.ant; valor.value=s.valor.toLocaleString('pt-BR',{minimumFractionDigits:2}); margem.value=s.margem; maxParcelas.value=s.max; document.querySelector(`input[value="${s.modo}"]`).checked=true; calcular()}
+async function baixarImagem(){calcular(); const area=document.getElementById('resultadoArea'); const canvas=await html2canvas(area,{scale:2,backgroundColor:'#ffffff'}); const a=document.createElement('a'); a.download='simulacao_comercial_sipag.jpg'; a.href=canvas.toDataURL('image/jpeg',0.95); a.click();}
+function compartilhar(){calcular(); const texto=`Simulação Sipag%0AValor: ${document.getElementById('kValor').textContent}%0AValor líquido: ${document.getElementById('kLiquido').textContent}%0AModo: ${document.getElementById('kModo').textContent}`; window.open(`https://wa.me/?text=${texto}`,'_blank');}
+document.getElementById('valor').addEventListener('blur',e=>{const v=num('valor'); if(v) e.target.value=v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})});
+listarSalvas(); calcular();
+</script>
+</body>
+</html>
