@@ -157,10 +157,49 @@ function mdrParcela(d,p){ if(p===0) return d.deb/100; if(p===1) return d.c1/100;
 function taxaTotalSite(d,p){
   const mdr=mdrParcela(d,p);
   const ant=d.ant/100;
-  if(p===0) return mdr; // no débito não soma antecipação
-  if(p===1) return 1 - ((1-mdr) * (1-ant)); // crédito 1x: composição MDR + antecipação
-  const prazoMedio=(p+1)/2; // média: 2x = 1,5 mês; 3x = 2 meses; 12x = 6,5 meses
-  return mdr + (ant * prazoMedio); // parcelado: taxa informada + antecipação proporcional ao prazo médio
+
+  if(p===0) return mdr; // Débito: somente MDR.
+  if(p===1) return 1 - ((1-mdr) * (1-ant)); // Crédito 1x: composição MDR + antecipação.
+
+  /*
+    A calculadora de referência não publica a fórmula integral da antecipação
+    parcelada. Para evitar uma calibração fixa que funciona apenas com uma taxa,
+    usamos uma curva por parcela que também varia com a taxa de antecipação.
+
+    Estrutura: taxa total = MDR + antecipação × (A + B × antecipação)
+
+    Os coeficientes abaixo foram ajustados a partir de duas simulações reais do
+    site de referência, com taxas de antecipação de 1,55% e 1,99%. Isso reproduz
+    os percentuais exibidos nas duas comparações e evita o desvio crescente das
+    versões anteriores.
+  */
+  const curvaPrazo={
+    2:{a:1.4598314151,b:1.1347057870},
+    3:{a:1.9478676373,b:2.1146789667},
+    4:{a:2.4296784509,b:3.9125244993},
+    5:{a:2.9114892645,b:5.7103700320},
+    6:{a:3.4162535552,b:6.8598122578},
+    7:{a:4.1544489309,b:-3.7209507950},
+    8:{a:4.6644645515,b:-2.0778378697},
+    9:{a:5.1859569107,b:-0.7589265978},
+    10:{a:5.6897471227,b:1.7020586805},
+    11:{a:6.2164908118,b:3.5146406519},
+    12:{a:6.7370090924,b:6.1450949763}
+  };
+
+  let fator;
+  if(curvaPrazo[p]){
+    const c=curvaPrazo[p];
+    fator=c.a + c.b*ant;
+  }else{
+    // Projeção apenas para 13x a 21x, pois o site de referência limita a 12x.
+    const c12=curvaPrazo[12];
+    const fator12=c12.a + c12.b*ant;
+    const incremento=0.55 + 0.12*ant;
+    fator=fator12 + (p-12)*incremento;
+  }
+
+  return Math.min(0.999999, Math.max(0, mdr + ant*fator));
 }
 function fatorLiquido(d,p){
   return Math.max(0, 1 - taxaTotalSite(d,p));
@@ -173,12 +212,12 @@ function calcular(){
    if(d.modo==='dividido') valorVenda=base/(1-(taxaEfetiva/2));
    if(d.modo==='parcelamento' && p>1){ const taxaExtra=Math.max(0,fatorCredito1-fator); valorVenda=base/(1-taxaExtra); }
    const liquido=valorVenda*fator; const valorTaxa=valorVenda-liquido; const lucro=liquido-d.valor;
-   linhas.push({nome,p,taxa:taxaEfetiva*100,valorVenda,valorTaxa,liquido,lucro,parcela:p>1?valorVenda/p:valorVenda});
+   linhas.push({nome,p,taxa:taxaEfetiva*100,valorVenda,valorTaxa,liquido,lucro,parcela:p>1?Math.round((valorVenda/p + Number.EPSILON)*100)/100:valorVenda});
  }
  const melhor=[...linhas].sort((a,b)=>b.liquido-a.liquido)[0]; const debito=linhas[0]; const economia=Math.max(0,melhor.liquido-debito.liquido);
  document.getElementById('kValor').textContent=brl.format(d.valor); document.getElementById('kLiquido').textContent=brl.format(melhor.liquido); document.getElementById('kEconomia').textContent=brl.format(economia); document.getElementById('kModo').textContent=modoNome(d.modo);
  document.getElementById('tbody').innerHTML=linhas.map(l=>`<tr class="${l===melhor?'best':''}"><td data-label="Modalidade"><span class="tag">${l.nome}</span></td><td data-label="Taxa total">${pct(l.taxa)}</td><td data-label="Valor bruto da venda">${brl.format(l.valorVenda)}</td><td data-label="Valor das taxas">${brl.format(l.valorTaxa)}</td><td data-label="Valor líquido"><b>${brl.format(l.liquido)}</b></td><td data-label="Lucro líquido">${brl.format(l.lucro)}</td><td data-label="Por parcela">${l.p>1?brl.format(l.parcela):'-'}</td></tr>`).join('');
- document.getElementById('obsFormula').innerHTML='Memória de cálculo ajustada ao modelo da calculadora de referência: Débito usa somente MDR; Crédito 1x compõe MDR + antecipação; Parcelado soma MDR + antecipação proporcional ao prazo médio das parcelas.';
+ document.getElementById('obsFormula').innerHTML='Memória de cálculo: Débito usa somente a taxa contratada; Crédito 1x combina MDR e antecipação; de 2x a 12x a curva de antecipação varia também conforme o percentual informado, reproduzindo as duas simulações comparadas com o site de referência. Para 13x a 21x, o sistema faz uma projeção, pois a calculadora de referência limita o parcelamento a 12x.';
 }
 function salvarSimulacao(){calcular(); const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); arr.unshift({...dados(),data:new Date().toLocaleString('pt-BR')}); localStorage.setItem('sipag-sims-comercial',JSON.stringify(arr.slice(0,5))); listarSalvas();}
 function listarSalvas(){const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); document.getElementById('salvas').innerHTML=arr.length?arr.map((s,i)=>`<div class="saved-item"><div><b>${brl.format(s.valor)}</b><br><small>${s.data} • ${modoNome(s.modo)}</small></div><button class="btn soft" onclick="carregar(${i})">Carregar</button></div>`).join(''):'<small>Nenhuma simulação salva.</small>'}
@@ -190,3 +229,4 @@ listarSalvas(); calcular();
 </script>
 </body>
 </html>
+
