@@ -37,7 +37,11 @@
     .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.btn{border:0;border-radius:15px;padding:13px 14px;font-weight:950;cursor:pointer;transition:.15s ease}.btn:hover{transform:translateY(-1px)}.primary{background:linear-gradient(135deg,var(--roxo),var(--roxo-2));color:#fff}.whats{background:linear-gradient(135deg,#00a862,#00c875);color:#fff}.outline{background:#fff;color:var(--roxo);border:1px solid #d8b9ef}.soft{background:var(--roxo-3);color:var(--roxo)}
     .result-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.result-head h2{margin:0;font-size:17px;color:var(--roxo)}.pill{background:var(--verde-3);color:var(--verde);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:950}
     .tablewrap{overflow:auto;border:1px solid #eee5f6;border-radius:20px;background:#fff}table{width:100%;min-width:820px;border-collapse:separate;border-spacing:0}th,td{padding:13px 12px;border-bottom:1px solid #f0edf4;text-align:right;font-size:14px;white-space:nowrap}th:first-child,td:first-child{text-align:left}th{background:#fbf9fe;color:#5b5364;text-transform:uppercase;font-size:11px;letter-spacing:.05em}tbody tr:hover{background:#fdfbff}tr.best{background:#effff6}.tag{display:inline-flex;padding:5px 9px;border-radius:999px;background:var(--verde-3);color:var(--verde);font-size:12px;font-weight:950}
-    .footer-strip{margin-top:14px;background:linear-gradient(90deg,var(--roxo-3),var(--verde-3));border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#3f2b4e}.footer-strip b{color:var(--roxo)}.note{font-size:12px;color:var(--muted);line-height:1.45;margin-top:10px}.saved{display:grid;gap:8px;margin-top:10px}.saved-item{border:1px solid var(--line);border-radius:16px;padding:11px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff}.saved-item small{color:var(--muted)}
+    .footer-strip{margin-top:14px;background:linear-gradient(90deg,var(--roxo-3),var(--verde-3));border:1px solid var(--line);border-radius:20px;padding:15px;display:flex;justify-content:space-between;gap:12px;align-items:center;color:#3f2b4e}.footer-strip b{color:var(--roxo)}
+    .info-card{margin-top:16px;border:1px solid #b9d7ef;border-left:5px solid #2f80c9;background:#f4faff;border-radius:18px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+    .info-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#dcefff;color:#1f67a6;font-weight:800;font-size:20px}
+    .info-card h3{margin:0 0 5px;color:#24465f;font-size:16px}.info-card p{margin:0;color:#526875;line-height:1.5;font-size:13px}.portal-btn{white-space:nowrap;text-decoration:none}
+    @media(max-width:700px){.info-card{grid-template-columns:auto 1fr}.portal-btn{grid-column:1/-1;width:100%;text-align:center}.info-icon{align-self:start}}
     @media(max-width:980px){
       .hero,.layout{grid-template-columns:1fr}
       .kpis{grid-template-columns:repeat(3,1fr)}
@@ -111,7 +115,6 @@
 
       <div class="actions">
         <button class="btn primary" onclick="calcular()">Calcular</button>
-        <button class="btn soft" onclick="salvarSimulacao()">Salvar</button>
         <button class="btn outline" onclick="baixarImagem()">Gerar JPG</button>
         <button class="btn whats" onclick="compartilhar()">Compartilhar</button>
       </div>
@@ -132,10 +135,13 @@
         <div><b>Mais lucro para o seu negócio!</b><br><small>Com a Sipag, você visualiza o impacto das taxas antes de vender.</small></div>
         <button class="btn outline" onclick="window.print()">Gerar proposta / PDF</button>
       </div>
-      <div class="note" id="obsFormula"></div>
-      <div class="saved-section">
-        <h2 style="margin-top:18px">Simulações salvas</h2>
-        <div class="saved" id="salvas"></div>
+      <div class="info-card" role="note" aria-label="Observação sobre os valores da simulação">
+        <div class="info-icon" aria-hidden="true">i</div>
+        <div>
+          <h3>Observação</h3>
+          <p>Os valores apresentados nesta simulação são estimativas e podem apresentar pequenas variações em relação aos valores efetivamente processados pela Sipag. Para confirmação dos cálculos, consulte o Portal do Lojista Sipag ou realize uma simulação diretamente pela máquina de cartões Sipag.</p>
+        </div>
+        <a class="btn portal-btn" href="https://portal.sippe.com.br/lojista/auth/login" target="_blank" rel="noopener noreferrer">Acessar Portal do Lojista</a>
       </div>
     </section>
   </main>
@@ -217,16 +223,11 @@ function calcular(){
  const melhor=[...linhas].sort((a,b)=>b.liquido-a.liquido)[0]; const debito=linhas[0]; const economia=Math.max(0,melhor.liquido-debito.liquido);
  document.getElementById('kValor').textContent=brl.format(d.valor); document.getElementById('kLiquido').textContent=brl.format(melhor.liquido); document.getElementById('kEconomia').textContent=brl.format(economia); document.getElementById('kModo').textContent=modoNome(d.modo);
  document.getElementById('tbody').innerHTML=linhas.map(l=>`<tr class="${l===melhor?'best':''}"><td data-label="Modalidade"><span class="tag">${l.nome}</span></td><td data-label="Taxa total">${pct(l.taxa)}</td><td data-label="Valor bruto da venda">${brl.format(l.valorVenda)}</td><td data-label="Valor das taxas">${brl.format(l.valorTaxa)}</td><td data-label="Valor líquido"><b>${brl.format(l.liquido)}</b></td><td data-label="Lucro líquido">${brl.format(l.lucro)}</td><td data-label="Por parcela">${l.p>1?brl.format(l.parcela):'-'}</td></tr>`).join('');
- document.getElementById('obsFormula').innerHTML='Memória de cálculo: Débito usa somente a taxa contratada; Crédito 1x combina MDR e antecipação; de 2x a 12x a curva de antecipação varia também conforme o percentual informado, reproduzindo as duas simulações comparadas com o site de referência. Para 13x a 21x, o sistema faz uma projeção, pois a calculadora de referência limita o parcelamento a 12x.';
 }
-function salvarSimulacao(){calcular(); const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); arr.unshift({...dados(),data:new Date().toLocaleString('pt-BR')}); localStorage.setItem('sipag-sims-comercial',JSON.stringify(arr.slice(0,5))); listarSalvas();}
-function listarSalvas(){const arr=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]'); document.getElementById('salvas').innerHTML=arr.length?arr.map((s,i)=>`<div class="saved-item"><div><b>${brl.format(s.valor)}</b><br><small>${s.data} • ${modoNome(s.modo)}</small></div><button class="btn soft" onclick="carregar(${i})">Carregar</button></div>`).join(''):'<small>Nenhuma simulação salva.</small>'}
-function carregar(i){const s=JSON.parse(localStorage.getItem('sipag-sims-comercial')||'[]')[i]; if(!s)return; txDebito.value=s.deb; txCredito1.value=s.c1; txCredito26.value=s.c26; txCredito712.value=s.c712; txCredito1321.value=s.c1321||0; txAntecipacao.value=s.ant; valor.value=s.valor.toLocaleString('pt-BR',{minimumFractionDigits:2}); margem.value=s.margem; maxParcelas.value=s.max; document.querySelector(`input[value="${s.modo}"]`).checked=true; calcular()}
 async function baixarImagem(){calcular(); const area=document.getElementById('resultadoArea'); const canvas=await html2canvas(area,{scale:2,backgroundColor:'#ffffff'}); const a=document.createElement('a'); a.download='simulacao_comercial_sipag.jpg'; a.href=canvas.toDataURL('image/jpeg',0.95); a.click();}
 function compartilhar(){calcular(); const texto=`Simulação Sipag%0AValor: ${document.getElementById('kValor').textContent}%0AValor líquido: ${document.getElementById('kLiquido').textContent}%0AModo: ${document.getElementById('kModo').textContent}`; window.open(`https://wa.me/?text=${texto}`,'_blank');}
 document.getElementById('valor').addEventListener('blur',e=>{const v=num('valor'); if(v) e.target.value=v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})});
-listarSalvas(); calcular();
+calcular();
 </script>
 </body>
 </html>
-
